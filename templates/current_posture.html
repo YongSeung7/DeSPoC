@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Current Posture</title>
+  <style>
+    body {
+      font-family: Verdana, sans-serif;
+      text-align: left;
+      background-color: #FBEFC5;
+      width: 1500px; /* 고정된 가로 크기 */
+      height: 700px; /* 고정된 세로 크기 */
+      margin: 0;
+      padding: 0;
+      overflow: auto; 
+    }
+
+    .container {
+      width: 1200px;
+      height: 650px;
+      background-color: #f7f4eb;
+      border-radius: 25px;
+      box-shadow: 0 4px 12px rgb(101, 76, 39);
+      margin: 20px auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; /* 세로 방향 중앙 정렬 */
+      padding: 0;
+      position: relative;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 { 
+      color: #1E90FF;
+      font-family: Verdana, sans-serif;
+      font-size: 36px; /* 작은 크기 */
+      margin: 10px 0;
+    }
+    
+    h2 {
+        color: black;
+        font-family: Verdana, sans-serif;
+        font-size: 36px;
+        margin: 10px 0;
+    }
+
+    h3 {
+      color: black;
+      font-family: Verdana, sans-serif;
+      font-size: 28px;
+      margin: 5px 0;
+      text-align: center;
+    }
+
+
+    img {
+      width: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 20px;
+    }
+
+    .yellow-semi-circle {
+      width: 40px;
+      height: 20px;
+      background-color: rgb(252, 226, 130);
+      border-radius: 20px 20px 0 0;
+      margin: -84.5px;
+    }
+  
+
+    .small-box {
+      width: 96.5%;
+      height: 80%;
+      background-color: #f1e6d4;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      margin: 0 auto;
+    }
+
+    .bar1 {
+      width: 50%;
+      height: 50px;
+      background-color: #333;
+      border-radius: 25px;
+      display: flex;
+      gap: 5px;
+      padding: 5px;
+      justify-content: center; /* 블록을 왼쪽 정렬 */
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .bar2 {
+      width: 90%;
+      height: 50px;
+      background-color: #333;
+      border-radius: 25px;
+      display: flex;
+      gap: 5px;
+      padding: 5px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .bar3 {
+      width: 70%;
+      height: 50px;
+      background-color: #333;
+      border-radius: 25px;
+      display: flex;
+      gap: 5px;
+      padding: 5px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .block {
+      width: 50px;
+      height: 20px;
+    }
+
+    .empty-box {
+      width: 50px;
+      height: 100%;
+      background-color: #333;
+    }
+
+    .connector {
+      width: 200px;
+      height: 60px;
+      background-color: #888; /* 회색 사각형 */
+    }
+
+    .button {
+      margin: 10px;
+      padding: 10px 20px;
+      width: 90px;
+      height: 70px;
+      font-size: 16px;
+      cursor: pointer;
+      color: white;
+      background-color: #f2c3a3;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .button:hover {
+      background-color: #e4956d;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title">
+      <h1>DeSPoC</h1> 
+      <h2>Current Posture</h2>
+      <img src="{{ url_for('static', filename='stretch_icon.png') }}" alt="Stretch Icon">
+      <div class="yellow-semi-circle"></div>
+    </div>
+
+    <div class="small-box">
+      <!--현재 자세 텍스트-->
+      <h3 id="current-posture">
+        현재 자세: <span id="posture-label">Loading...</span>
+      </h3>
+      
+        <!-- 첫 번째 바 -->
+        <div class="bar1" id="bar1"></div>
+
+        <div class="connector"></div>
+
+        <!-- 두 번째 바 -->
+        <div class="bar2" id="bar2"></div>
+
+        <div class="connector"></div>
+  
+        <!-- 세 번째 바 -->
+        <div class="bar3" id="bar3"></div>
+    </div>
+    
+    <!-- Back to Menu 버튼 -->
+    <br>
+    <a href="/" class="button">Back to Menu</a>
+  </div>
+
+  <script>
+   // HUE 값을 압력 값으로 변환하는 함수
+function pressureToHue(pressure) {
+  if (pressure >= 220) {
+    return 0; // 최대값은 HUE=0
+  }
+  return 180 - (pressure * 180 / 220); // 공식 적용
+}
+
+// HUE 값을 RGB로 변환하는 함수
+function hueToRgb(hue) {
+  const s = 1; // 채도
+  const l = 0.5; // 명도
+
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((hue / 60) % 2 - 1));
+  const m = l - c / 2;
+
+  let r = 0,
+    g = 0,
+    b = 0;
+
+  if (hue >= 0 && hue < 60) {
+    r = c;
+    g = x;
+    b = 0;
+  } else if (hue >= 60 && hue < 120) {
+    r = x;
+    g = c;
+    b = 0;
+  } else if (hue >= 120 && hue < 180) {
+    r = 0;
+    g = c;
+    b = x;
+  } else if (hue >= 180 && hue < 240) {
+    r = 0;
+    g = x;
+    b = c;
+  } else if (hue >= 240 && hue < 300) {
+    r = x;
+    g = 0;
+    b = c;
+  } else if (hue >= 300 && hue <= 360) {
+    r = c;
+    g = 0;
+    b = x;
+  }
+
+  // RGB를 [0, 255] 범위로 변환
+  r = Math.round((r + m) * 255);
+  g = Math.round((g + m) * 255);
+  b = Math.round((b + m) * 255);
+
+  return `rgb(${r}, ${g}, ${b})`;
+}
+// 서버에서 데이터를 가져오는 함수
+async function fetchDataFromServer() {
+  try {
+    // Flask 서버의 특정 엔드포인트에서 JSON 데이터를 가져옴
+    const response = await fetch("/get_posture_data");
+    if (!response.ok) {
+      throw new Error("Failed to fetch data from server");
+    }
+    const data = await response.json(); // JSON 데이터를 파싱
+    return data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null; // 오류 시 빈 배열 또는 null 반환
+  }
+}
+
+    
+
+// 각 바에 데이터를 추가하고 색상을 설정하는 함수
+function createBlocks(barId, data) {
+  const bar = document.getElementById(barId);
+  bar.innerHTML = ""; // 기존 블록 제거
+
+  data.forEach((pressure) => {
+    const block = document.createElement("div");
+    block.classList.add("block");
+
+    // 압력 값에 따라 HUE 계산 및 색상 설정
+    const hue = pressureToHue(pressure);
+    const color = hueToRgb(hue);
+    block.style.backgroundColor = color;
+
+    // 바에 블록 추가
+    bar.appendChild(block);
+  });
+}
+
+// 데이터 갱신 및 UI 업데이트 함수
+async function updateBars() {
+  const data = await fetchDataFromServer();
+  if (data) {
+    const bar1Data = [data[10], data[12], data[14], data[16], data[18], data[20]];
+    const bar2Data = [data[5], data[6], data[7], data[8], data[9], data[11], data[13], data[15], data[17], data[19], data[21], data[22], data[23], data[24], data[25]];
+    const bar3Data = [data[0], data[1], data[2], data[3], data[4], data[26], data[27], data[28], data[29], data[30]];
+
+    // 블록 업데이트
+    createBlocks("bar1", bar1Data);
+    createBlocks("bar2", bar2Data);
+    createBlocks("bar3", bar3Data);
+  }
+}
+
+function sum(array) {
+  return array.reduce((acc, val) => acc + val, 0);
+}
+
+// 예측된 Posture를 받아오는 함수
+async function updatePosture() {
+  const data = await fetchDataFromServer();
+  let postureLabel = "Loading";
+  let color = "black"; // 기본 색상
+  if (sum(data)>1200) {
+    if (data[35] == 0) {
+      postureLabel = "정상 자세";
+      color = "green"; // 정상 자세는 초록색
+    } else if (data[35] == 1) {
+      postureLabel = "왼쪽다리 꼰 자세";
+      color = "red";
+    } else if (data[35] == 2) {
+      postureLabel = "오른쪽다리 꼰 자세";
+      color = "red";
+    } else if (data[35] == 3) {
+      postureLabel = "왼쪽 쏠림";
+      color = "red";
+    } else if (data[35] == 4) {
+      postureLabel = "오른쪽 쏠림";
+      color = "red";
+    } else if (data[35] == 5) {
+      postureLabel = "허리 구부림";
+      color = "red";
+    }
+  }
+    else {
+      postureLabel = "착석해 주세요!!";
+      color = "blue"; // '착석해 주세요' 메시지는 파란색으로 표시
+    }
+
+    // `posture-label` 요소 업데이트
+    const labelElement = document.getElementById("posture-label");
+    labelElement.textContent = postureLabel;
+    labelElement.style.color = color;
+}
+
+function fetchData() {
+        fetch('/get_data')  // Flask 서버의 /get_data 엔드포인트 호출
+          .then(response => response.json())  // JSON 응답 파싱
+          .then(data => {
+            const totalSeconds = Math.floor(data.time);
+            const emptyFlag = data.empty_flag;
+            if(emptyFlag === 0){
+              const hours = Math.floor(totalSeconds / 3600);
+              const minutes = Math.floor((totalSeconds % 3600)/60);
+              const seconds = totalSeconds % 60;
+
+            //   const timeString =
+            //     "착석 시간 - "+
+            //     String(hours).padStart(2,'0')+':'+
+            //     String(minutes).padStart(2,'0')+':'+
+            //     String(seconds).padStart(2,'0');
+
+            //     document.getElementById('time-display').textContent = timeString;
+
+            // }
+            // else{
+            //   document.getElementById('time-display').textContent = "자리에 착석해주세요";
+            }
+            
+          // 60초 간격으로 비디오 페이지로 이동
+          if (totalSeconds > 0 && totalSeconds % 60 === 0) {
+            //window.location.href = "/_video";
+            alert("스트레칭 시간입니다!!!!!!")
+          }
+            
+           
+          })
+          .catch(error => console.error('Error fetching data:', error));
+      }
+
+
+// 0.01초마다 데이터 갱신
+setInterval(updateBars, 10);
+
+// 2초마다 데이터 갱신
+setInterval(updatePosture, 1000);
+
+//1초마다 시간 갱신
+setInterval(fetchData, 1000);
+
+// 페이지 로드 시 첫 업데이트
+updateBars();
+updatePosture();
+
+  </script>
+</body>
+</html>
