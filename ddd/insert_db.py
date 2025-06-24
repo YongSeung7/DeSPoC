@@ -4,6 +4,7 @@ from MySQLdb import Error
 def insert_data(NeckAvg, NeckMin, NeckMax, TurtleCnt, BadPoseCnt, Rweight, Lweight, LlegCnt, RlegCnt, BendCnt, L_UnbalCnt, R_UnbalCnt, SitTime):
     try:
         # MariaDB에 연결
+        # qwdqwdqwdqwdqw
         connection = MySQLdb.connect(
             host='localhost',      # 데이터베이스 서버 주소
             user='yssong',           # MariaDB 사용자 이름
@@ -24,7 +25,7 @@ def insert_data(NeckAvg, NeckMin, NeckMax, TurtleCnt, BadPoseCnt, Rweight, Lweig
         cursor.execute(insert_query, (NeckAvg, NeckMin, NeckMax, TurtleCnt, BadPoseCnt, Rweight, Lweight, LlegCnt, RlegCnt, BendCnt, L_UnbalCnt, R_UnbalCnt, SitTime))
         connection.commit()
         
-        print("데이터가 성공적으로 삽입되었습니다.")
+        print("데이터가 성공적으로 삽입되었습니다!.")
         
         # 삽입된 데이터 확인
         select_query = 'SELECT * FROM MyData WHERE `id` = LAST_INSERT_ID();'
